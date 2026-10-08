@@ -31,6 +31,21 @@ export class UrlController{
             })
         }
     }
+    async getUserUrlsController(req, res) {
+        try {
+            const userId = req.user.id;
+            const result = await urlService.getUserUrls(userId);
+            res.status(200).json({
+                message: "success",
+                data: result
+            });
+        } catch (error) {
+            res.status(400).json({
+                message: "failed",
+                error: error.message
+            });
+        }
+    }
 }
 
 export default new UrlController()

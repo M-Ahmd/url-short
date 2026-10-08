@@ -13,5 +13,9 @@ export class UrlSerivce {
         const result = await urlRepository.getRealUrl(shortCode);
         return result.orignal;
     }
+    async getUserUrls(userId) {
+        const result = await urlRepository.getUrlsByUserId(userId);
+        return result;
+    }
 }
 export default new UrlSerivce();

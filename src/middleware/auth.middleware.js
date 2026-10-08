@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { authSchema } from '../validation/auth.validation.js';
 export class AuthMiddleware {
     async verify(req, res, next) {
         try {
@@ -12,6 +13,20 @@ export class AuthMiddleware {
         }catch(error)
         {
             res.status(403).json({ error: error.message });
+        }
+    }
+
+    async validateEmail(req, res, next)
+    {
+        const email = req.body.email;
+        const password = req.body.password;
+
+        try {
+            authSchema.parse({email, password});
+            next();
+        }catch(error)
+        {
+            res.status(403).json({error : error.message});
         }
     }
 

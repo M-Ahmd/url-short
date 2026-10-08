@@ -14,5 +14,10 @@ export class UrlRepository {
             where : {shorted : shortCode}
         })
     }
+    async getUrlsByUserId(userId) {
+        return await connect.url.findMany({
+            where: { userid: userId }
+        });
+    }
 }
 export default new UrlRepository();
