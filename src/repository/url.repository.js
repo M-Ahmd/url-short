@@ -19,16 +19,12 @@ export class UrlRepository {
             where: { userid: userId }
         });
     }
-    async getUrlByDiscription(discription, userId)
-    {
-        return await connect.url.findMany({
-            where :{
-                userid : userId,
-                discription : {
-                    search : discription
-                }
-            }
-        });
+    async getUrlByDiscription(discription, userId) {
+        return await connect.$queryRaw`
+            SELECT * FROM "Url"
+            WHERE userid = ${userId}
+              AND to_tsvector('english', COALESCE(discription, '')) @@ websearch_to_tsquery('english', ${discription})
+        `;
     }
 }
 export default new UrlRepository();
