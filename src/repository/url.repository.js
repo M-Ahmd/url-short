@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 const connect = new PrismaClient();
 
 export class UrlRepository {
@@ -17,6 +17,17 @@ export class UrlRepository {
     async getUrlsByUserId(userId) {
         return await connect.url.findMany({
             where: { userid: userId }
+        });
+    }
+    async getUrlByDiscription(discription, userId)
+    {
+        return await connect.url.findMany({
+            where :{
+                userid : userId,
+                discription : {
+                    search : discription
+                }
+            }
         });
     }
 }

@@ -41,6 +41,23 @@ export class UrlController {
             });
         }
     }
+    async getUrlsByDiscription(req, res){
+        try{
+            const discription = req.query.dis;
+            const userId = req.user.id;
+            const result = await urlService.findUrlByDiscrition(discription, userId);
+            res.status(200).json({
+                success : "true",
+                data : result
+            })
+        }catch(error)
+        {
+            res.status(400).json({
+                success : "failed",
+                error: error.message,
+            })
+        }
+    }
 }
 
 export default new UrlController()
