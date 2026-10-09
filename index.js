@@ -2,6 +2,7 @@ import express from 'express'
 import auth from './src/routes/auth.routes.js'
 import urlRouter from './src/routes/url.routes.js'
 import redisClient from './src/config/redis.config.js'
+import './src/jobs/email.job.js';
 
 const app = express()
 

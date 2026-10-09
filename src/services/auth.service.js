@@ -1,12 +1,17 @@
 import authRepository from "../repository/auth.repository.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { emailQueue } from "../jobs/email.job.js";
 export class AuthService {
     async registerService(data) {
         const email = data['email'];
         const password = data['password'];
         const hashed = await bcrypt.hash(password, 10);
         const result = await authRepository.createEmail(email, hashed);
+        await emailQueue.add('welcome-email-task', {
+            email : email
+        });
+        
         const token = jwt.sign({id : result.id, email : result.email}, 'secret', { expiresIn: '1d' })
 
         return token;
