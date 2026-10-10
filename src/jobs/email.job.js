@@ -51,3 +51,10 @@ emailWorker.on('failed', (job, err) => {
 emailWorker.on('error', (err) => {
     logger.error({ err }, "BullMQ worker connection error");
 });
+
+export const closeEmailWorker = async () => {
+    logger.info("Closing BullMQ email worker and queue...");
+    await emailWorker.close();
+    await emailQueue.close();
+    logger.info("BullMQ email worker and queue closed successfully.");
+};
