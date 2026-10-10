@@ -1,12 +1,16 @@
 import urlRepository from "../repository/url.repository.js";
 import crypto from 'crypto';
 import redisClient from '../config/redis.config.js';
-import console from "console";
+import logger from '../config/logger.js';
+import { cacheOperations, urlsCreatedTotal, urlClicksTotal } from '../monitoring/metrics.js';
+
 export class UrlSerivce {
     async createUrl(originalUrl, userId) {
         if(!originalUrl) throw new Error("the url is empty");
         const shortCode = crypto.randomBytes(3).toString('hex');
         const result = await urlRepository.createUrl(originalUrl, shortCode, userId);
+        urlsCreatedTotal.inc();
+        logger.info({ userId, shortCode }, "Short URL created successfully");
         return result;
     }
     async getUrl(shortCode)
@@ -17,15 +21,20 @@ export class UrlSerivce {
         const cachedUrl = await redisClient.get(cacheKey);
         if(cachedUrl)
         {
-            console.log("🚀 Cache Hit: URL loaded from Redis");
-            urlRepository.getRealUrl(shortCode).catch(err => console.log(err));
+            cacheOperations.inc({ operation: "url", result: "hit" });
+            urlClicksTotal.inc();
+            logger.debug({ shortCode, cacheKey }, "Cache Hit: URL loaded from Redis");
+            urlRepository.getRealUrl(shortCode).catch(err => logger.error({ err, shortCode }, "Failed to increment clicks asynchronously"));
 
             return cachedUrl;
         }
-        console.log("🐌 Cache Miss: Fetching from Postgres");
+        
+        cacheOperations.inc({ operation: "url", result: "miss" });
+        logger.debug({ shortCode, cacheKey }, "Cache Miss: Fetching URL from Postgres");
 
         const result = await urlRepository.getRealUrl(shortCode);
         await redisClient.setEx(cacheKey, 3600, result.orignal);
+        urlClicksTotal.inc();
         return result.orignal;
     }
     async getUserUrls(userId) {
@@ -33,7 +42,7 @@ export class UrlSerivce {
         return result;
     }
     async findUrlByDiscrition(discription, userId) {
-        console.log(`the discription is ${discription} and the use id is ${userId}`)
+        logger.debug({ userId, discription }, "Searching URLs by description");
         if (!discription || !userId) throw Error("please provide a discription or user id right");
 
         const cleanSearch = discription.trim().toLowerCase();
@@ -41,11 +50,13 @@ export class UrlSerivce {
 
         const cachedResult = await redisClient.get(cacheKey);
         if (cachedResult) {
-            console.log("🚀 Search Cache Hit from Redis");
+            cacheOperations.inc({ operation: "search", result: "hit" });
+            logger.debug({ userId, cacheKey }, "Search Cache Hit from Redis");
             return JSON.parse(cachedResult);
         }
 
-        console.log("🐌 Search Cache Miss: Fetching from Postgres");
+        cacheOperations.inc({ operation: "search", result: "miss" });
+        logger.debug({ userId, cacheKey }, "Search Cache Miss: Fetching from Postgres");
         const result = await urlRepository.getUrlByDiscription(discription, userId);
 
         await redisClient.setEx(cacheKey, 120, JSON.stringify(result));

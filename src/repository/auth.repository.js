@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-const prisma = new PrismaClient()
+import prisma from "../config/prisma.config.js";
+
 export class AuthRepository {
     async createEmail(email, hashed){
         return await prisma.user.create({data : {
